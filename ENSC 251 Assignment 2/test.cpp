@@ -1,5 +1,4 @@
-#include <string>
-#ifndef PARSERCLASSES_H_
-//Comment
-/*comment
-comment LINE 2*/
+void main()
+{
+	return 1 + 1;
+}

@@ -35,8 +35,12 @@ void TokenList::append(const string &str)
 {
 	Token *t1;
 	t1 = new Token;
+	if(str == "")
+	{
+		return;
+	}
 
-	if(tail == NULL && head == NULL)//Checks if the list is empty
+	else if(tail == NULL && head == NULL)//Checks if the list is empty
 	{
 		//Sets the new node's prev and next to NULL
 		t1->next = NULL;
@@ -174,14 +178,12 @@ void TokenList::deleteToken(Token *token)
 void Tokenizer::prepareNextToken()
 {
 	//Initialize variables
-	complete = false;
+	Tokenizer::complete = false;
 	tokenLength = 0;
 	int strLength = str->length();
-	bool isDelim = false;
 	int i = offset;
 	int j = 0;
 	int k = 0;
-
 	
     for(i = offset; i < strLength; i++)//Opening for loop for the next token, i is the current string position
     {
@@ -190,12 +192,14 @@ void Tokenizer::prepareNextToken()
 			if((*str)[i] == DELIM[j] && (*str)[i + 1] == DELIM[j])//Checks for a double character operator
 			{
 				isDouble = true;
+				//offset = offset + 2;
 				return;
 			}
 
 			else if((*str)[i] == DELIM[j])//Checks for a single character operator
 			{
 				isSingle = true;
+				//offset = offset + 1;
 				return;
 			}
 
@@ -203,12 +207,66 @@ void Tokenizer::prepareNextToken()
 			{
 				continue;//Continues to the next character stored in Delim
 			}
-	}//End Delim For block
+		}//End Delim For block
 		
 		if(((*str)[i] == '\t') || ((*str)[i] == ' '))//Checks for any whitespace
 		{
 			return;
 		}
+
+		if((*str)[i] == '"')
+		{
+			for(k = i; k < strLength; k++)
+			{
+				if((*str)[k] == '"')
+				{
+					tokenLength = tokenLength + 1;
+					return;
+				}
+				else
+				{
+					tokenLength = tokenLength + 1;
+					continue;
+				}
+			}
+		}
+
+		else if((*str)[i] == '-' && (*str)[i + 1] == '>')
+		{
+			isDouble = true;
+			return;
+		}
+
+		else if((*str)[i + 1] == '=')
+		{
+			if((*str)[i] == '!' && (*str)[i] == '>' && (*str)[i] == '<' && (*str)[i] == '+' && (*str)[i] == '-'
+				&& (*str)[i] == '*' && (*str)[i] == '/' && (*str)[i] == '%' && (*str)[i] == '&' && (*str)[i] == '^'
+				&& (*str)[i] == '|')
+			{
+				isDouble = true;
+				return;
+			}
+			else
+			{
+				isSingle = true;
+				return;
+			}
+		}
+
+		else if((*str)[i] == '-')
+		{
+			if((*str)[i + 1] == '>' && (*str)[i + 2] == '*')
+			{
+				tokenLength = 3;
+				return;
+			}
+			else if((*str)[i + 1] == '>')
+			{
+				isSingle = true;
+				return;
+			}
+		}
+
 
 		else if((*str)[i] == '\n')//Checks for the newline character, adds 1 and set complete to true
 		{
@@ -235,29 +293,11 @@ void Tokenizer::prepareNextToken()
 		return;
 		}
 
-		else if ((*str)[i] == '/' && (*str)[i + 1] == '*')//Checks for a block comment
-		{
-			for (k = i; k < strLength; k++)//adds 1 to token length as it goes through the block comment
-			{
-				if ((*str)[k] == '*' && (*str)[k + 1] == '/')
-				{
-					return;
-				}
-
-				else
-				{
-					tokenLength = tokenLength + 1;
-					continue;
-				}
-			}
-			return;
-		}
-
 		else if ((*str)[i] == '#')//Looks for precompiler commands
 		{
 			for (k = i; k < strLength; k++)//Adds 1 to tokenLength until whitespace is reached
 			{
-				if ((*str)[k] == ' ' || (*str)[k] == '\t')
+				if ((*str)[k] == ' ' || (*str)[k] == '\t' || (*str)[k] == '\n')
 				{
 					return;
 				}
@@ -321,9 +361,8 @@ void Tokenizer::setString(string *strIN)
 //Calls Tokenizer::prepareNextToken() as the last statement before returning.
 string Tokenizer::getNextToken()
 {
-	complete = false;
-	offset = offset + tokenLength;//Sets the new offset after the token
 	string tempString;
+	Tokenizer::complete = false;
 	
 	if ((*str)[offset] == '/' && (*str)[offset + 1] == '/')//Checks if inline comment is preset
 	{
@@ -337,7 +376,7 @@ string Tokenizer::getNextToken()
 		tempString = str->substr(offset, tokenLength);
 	}
 
-	else if ((*str)[0] == '#')//Checks for preprocessor commands
+	else if ((*str)[offset] == '#')//Checks for preprocessor commands
 	{
 		processingIncludeStatement = true;
 		tempString = str->substr(offset, tokenLength);
@@ -345,25 +384,26 @@ string Tokenizer::getNextToken()
 
 	else if ((*str)[offset] == ' ' || (*str)[offset] == '\t')//Checks for Whitespace
 	{
-		tempString = str->substr(offset - tokenLength, tokenLength);
+		tempString = str->substr(offset, tokenLength);
 		offset = offset + 1;
 	}
 
-	else if ((*str)[offset - tokenLength] == '\n')//Checks for the newline character
+	else if((*str)[offset] == '\n')
 	{
-		Tokenizer::complete = true;//Sets complete at end of line
+		//Tokenizer::complete = true;
+		tempString = str->substr(offset, tokenLength);
 	}
-	
+
 	else
 	{
-		if (isDouble && tokenLength == 0)//If double operator, tokenLength is 2, offset has two added
+		if (isDouble && (tokenLength == 0))//If double operator, tokenLength is 2, offset has two added
 		{
 			tempString = str->substr(offset, 2);
 			offset = offset + 2;
 			isDouble = false;
 		}
 
-		else if (isSingle && tokenLength == 0)//If single operator, tokenLength is 1, offset has 1 added
+		else if (isSingle && (tokenLength == 0))//If single operator, tokenLength is 1, offset has 1 added
 		{
 			tempString = str->substr(offset, 1);
 			offset = offset + 1;
@@ -372,13 +412,17 @@ string Tokenizer::getNextToken()
 		
 		else//Current string is NOT a special case and only a number/hex/variable/etc.
 		{
-			tempString = str->substr(offset - tokenLength, tokenLength);
+			tempString = str->substr(offset, tokenLength);
 		}
 	}
 
 
+	offset = offset + tokenLength;//Sets the new offset after the token
 	tokenLength = 0;//Reset tokenLength
-	Tokenizer::complete = false;//completion is false
-	prepareNextToken();//Calls PrepareNextToken
+	//Tokenizer::complete = false;//completion is false
+	bool isDouble = false;
+	bool isSingle = false;
+	if(!(Tokenizer::complete))
+	{prepareNextToken();}//Calls PrepareNextToken
 	return tempString;//Returns the last string
 }

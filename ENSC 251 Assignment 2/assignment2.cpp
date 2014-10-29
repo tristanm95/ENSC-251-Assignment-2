@@ -54,7 +54,7 @@ int main() {
 	/*Test your tokenization of the file by traversing the tokens list and printing out the tokens*/
 	Token *t = tokens.getFirst();
 	while(t) {
-		cout << t->getStringRep() << " ";
+		cout << t->getStringRep() << endl;
 		t = t->getNext();
 	}
 
@@ -84,7 +84,7 @@ int removeInlineComments(TokenList &tokenList)
 		tmp = tmp->getNext();
 	}
 
-	return 1;
+	return 2;
 }
 
 //Remove all block comments from the tokenList including /* and */ markers
@@ -107,6 +107,6 @@ int removeBlockComments(TokenList &tokenList)
 		}
 		t = t->getNext();
 	}
-	return 1;
+	return 3;
 }
 
