@@ -61,10 +61,29 @@ int main() {
 	return 0;
 }
 
+
 //Removes all inline comments from the tokenList including the // marker
 //Returns the number of comments removed
 int removeInlineComments(TokenList &tokenList)
 {
+	Token *tmp = tokenList.getFirst();
+	Token *tmp1 = tokenList.getFirst();
+
+	while (tmp->getNext() != NULL)
+	{
+		if (tmp->getStringRep() == "//")
+		{
+			do
+			{
+				tmp1 = tmp;
+				tmp = tmp->getNext();
+				tokenList.deleteToken(tmp1);
+			} while (tmp->getStringRep() != "\n");
+		}
+
+		tmp = tmp->getNext();
+	}
+
 	return 1;
 }
 
@@ -72,5 +91,22 @@ int removeInlineComments(TokenList &tokenList)
 //Returns the number of block comments removed (where each pair of /* and */ count as one comment)
 int removeBlockComments(TokenList &tokenList)
 {
+	Token *t = tokenList.getFirst();
+	Token *temp1 = t;
+
+	while (t->getNext() != NULL)
+	{
+		if (t->getStringRep() == "/*")
+		{
+			do
+			{
+				temp1 = t;
+				t = t->getNext();
+				tokenList.deleteToken(temp1);
+			} while (t->getStringRep() != "*/");
+		}
+		t = t->getNext();
+	}
 	return 1;
 }
+

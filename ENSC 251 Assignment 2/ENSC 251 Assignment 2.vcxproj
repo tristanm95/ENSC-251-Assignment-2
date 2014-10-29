@@ -65,7 +65,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="assignment2.cpp" />
-    <ClCompile Include="main.cpp" />
     <ClCompile Include="parserClasses.cpp" />
   </ItemGroup>
   <ItemGroup>

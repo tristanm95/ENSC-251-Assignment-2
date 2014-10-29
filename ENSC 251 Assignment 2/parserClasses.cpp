@@ -24,7 +24,7 @@ void TokenList::append(const string &str)
 	else
 	{
 		//Sets the new token's prev and next to the current tail pointer
-		t1->next = tail;
+		t1->next = NULL;
 		t1->prev = tail;
 
 		//Sets the current tail pointer's node's next to the new token
@@ -91,7 +91,7 @@ void TokenList::deleteToken(Token *token)
 					//Sets the head to the next/previous link in the list
 					head = head->next;
 					head->prev = head->next;
-					
+
 					delete temp;//Deletes the top token
 					found = true;
 				}
@@ -143,86 +143,121 @@ void TokenList::deleteToken(Token *token)
 void Tokenizer::prepareNextToken()
 {
 	complete = false;
+	tokenLength = 0;
 	int strLength = str->length();
 	bool isDelim = false;
-	bool isSpecDelim = false;
+	int i = offset;
+	int j = 0;
+	int k = 0;
 
-	for (int i = 0; i < strLength; i++)
-	{
-		int j = 0;
-		for (j = 0; j < strLength; j++)
-		{
-			if (str[i] == DELIM[j])
+	
+    for(i = offset; i < strLength; i++)
+    {
+        for(j = 0; j < 17; j++)
+        {
+			if((*str)[i] == DELIM[j] && (*str)[i + 1] == DELIM[j])
 			{
-				isDelim = true;
-				break;
+				isDouble = true;
+				return;
 			}
 
-			else if (str[i] == specDELIM[j])
+			else if((*str)[i] == DELIM[j])
 			{
-				isSpecDelim = true;
-				break;
-			}
-			
-			else
-			{
-				tokenLength += 1;
-				offset += 1;
-			}
-		}
-
-		if (isSpecDelim)
-		{
-			if (str[i] == "#")
-			{
-				j = i;
-				while (str[j] != ">")
-				{
-					tokenLength += 1;
-					offset += 1;
-					j++;
-				}
-			}
-
-			else if (str[i] == "/" && str[i + 1] == "/")
-			{
-				while (str[j] != "\n")
-				{
-					tokenLength += 1;
-					offset += 1;
-					j++;
-				}
-			}
-
-			else if (str[i] == "/" && str[i + 1] == "*")
-			{
-				while (str[j] != "*" && str[j + 1] != "/")
-				{
-					tokenLength += 1;
-					offset += 1;
-					j++;
-				}
+				isSingle = true;
+				return;
 			}
 
 			else
 			{
-				tokenLength += 1;
+				continue;
 			}
 		}
+		if(((*str)[i] == '\t') || ((*str)[i] == ' '))
+		{
+			return;
+		}
+
+		else if((*str)[i] == '\n')
+		{
+			Tokenizer::complete = true;
+			return;
+		}
+
+		else if ((*str)[i] == '/' && (*str)[i + 1] == '/')
+		{
+			for(k = i; k < strLength; k++)
+			{
+				if((*str)[k] == '\n')
+				{
+					return;
+				}
+
+				else
+				{
+					tokenLength = tokenLength + 1;
+					continue;
+				}
+			}
+			return;
+		}
+
+		else if ((*str)[i] == '/' && (*str)[i + 1] == '*')
+		{
+			for (k = i; k < strLength; k++)
+			{
+				if ((*str)[k] == '*' && (*str)[k + 1] == '/')
+				{
+					return;
+				}
+
+				else
+				{
+					tokenLength = tokenLength + 1;
+					continue;
+				}
+			}
+			return;
+		}
+
+		else if ((*str)[0] == '#')
+		{
+			for (k = i; k < strLength; k++)
+			{
+				if ((*str)[k] != '\n')
+				{
+					tokenLength = tokenLength + 1;
+					continue;
+				}
+				else
+				{
+					return;
+				}
+			}
+		}
+
+		else
+		{
+			tokenLength = tokenLength + 1;
+			continue;
+		}
+
 	}
 }
+
 
 //Sets the current string to be tokenized
 //Resets all Tokenizer state variables
 //Calls Tokenizer::prepareNextToken() as the last statement before returning.
-void Tokenizer::setString(string *strIN) 
+void Tokenizer::setString(string *strIN)
 {
 	bool processingInlineComment = false;
 	bool processingBlockComment = false;
 	bool processingIncludeStatement = false;
 	bool complete = false;
+	offset = 0;
 
 	str = strIN;
+	str->append("\n");
 	prepareNextToken();
 	return;
 }
@@ -233,30 +268,62 @@ void Tokenizer::setString(string *strIN)
 //Calls Tokenizer::prepareNextToken() as the last statement before returning.
 string Tokenizer::getNextToken()
 {
+	complete = false;
+
+    offset = offset + tokenLength;
 	string tempString;
-	if (str[offset] == "/")
+	if ((*str)[offset] == '/' && (*str)[offset + 1] == '/')
 	{
 		processingInlineComment = true;
-	}
-
-	else if (str[offset] == "/" && str[offset + 1] == "*")
-	{
-		processingBlockComment = true;
-	}
-
-	else if (str[offset] == "<")
-	{
-		processingIncludeStatement = true;
-	}
-
-	else
-	{
 		tempString = str->substr(offset, tokenLength);
 	}
 
-	offset = offset + tokenLength;
-	tokenLength = 0;
+	else if ((*str)[offset] == '/' && (*str)[offset + 1] == '*')
+	{
+		processingBlockComment = true;
+		tempString = str->substr(offset, tokenLength);
+	}
 
+	else if ((*str)[0] == '#' && (*str)[1] == '<')
+	{
+		processingIncludeStatement = true;
+		tempString = str->substr(offset, tokenLength);
+	}
+
+	else if ((*str)[offset] == ' ' || (*str)[offset] == '\t')
+	{
+		tempString = str->substr(offset - tokenLength, tokenLength);
+		offset = offset + 1;
+	}
+
+	else if ((*str)[offset] == '\n')
+	{
+		Tokenizer::complete = true;
+	}
+	else
+	{
+		if (isDouble && tokenLength == 0)
+		{
+			tempString = str->substr(offset, 2);
+			offset = offset + 2;
+			isDouble = false;
+		}
+
+		else if (isSingle && tokenLength == 0)
+		{
+			tempString = str->substr(offset, 1);
+			offset = offset + 1;
+			isSingle = false;
+		}
+		else
+		{
+			tempString = str->substr(offset - tokenLength, tokenLength);
+		}
+	}
+
+
+	tokenLength = 0;
+	Tokenizer::complete = false;
 	prepareNextToken();
 	return tempString;
 }
