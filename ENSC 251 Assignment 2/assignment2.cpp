@@ -48,8 +48,8 @@ int main() {
 		tokens.append("\n");
 	}
 
-	removeInlineComments(tokens);
-	removeBlockComments(tokens);
+	//removeInlineComments(tokens);
+	//removeBlockComments(tokens);
 
 	/*Test your tokenization of the file by traversing the tokens list and printing out the tokens*/
 	Token *t = tokens.getFirst();

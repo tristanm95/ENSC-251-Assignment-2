@@ -9,8 +9,6 @@ using namespace std;
 //Declare your variables for storing delimiters here:
 
 const char DELIM[17] = { ':', '+', '-', '(', ')', '[', ']', '.', '-', '!', '~', '\"', '*', '&', '{', '}', ';'};
-const char specDELIM[1] = {'#'};
-const char whitespace[4] = {'\n', '\t', ' '};
 
 //Token class for a doubly-linked list of string tokens
 class Token {

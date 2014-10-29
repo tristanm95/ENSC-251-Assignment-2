@@ -180,6 +180,7 @@ void Tokenizer::prepareNextToken()
 		else if((*str)[i] == '\n')
 		{
 			Tokenizer::complete = true;
+			tokenLength = tokenLength + 1;
 			return;
 		}
 
@@ -219,22 +220,38 @@ void Tokenizer::prepareNextToken()
 			return;
 		}
 
-		else if ((*str)[0] == '#')
+		else if ((*str)[i] == '#')
 		{
 			for (k = i; k < strLength; k++)
 			{
-				if ((*str)[k] != '\n')
+				if ((*str)[k] == ' ' || (*str)[k] == '\t')
+				{
+					return;
+				}
+				else
 				{
 					tokenLength = tokenLength + 1;
 					continue;
 				}
-				else
-				{
-					return;
-				}
 			}
 		}
 
+		else if((*str)[i] == '<' && (*str)[i + 1] != ' ')
+		{
+			for(k = i; k < strLength; k++)
+			{
+				if((*str)[k] == '>')
+				{
+					tokenLength = tokenLength + 1;
+					return;
+				}
+				else
+				{
+					tokenLength = tokenLength + 1;
+					continue;
+				}
+			}
+		}
 		else
 		{
 			tokenLength = tokenLength + 1;
@@ -296,7 +313,7 @@ string Tokenizer::getNextToken()
 		offset = offset + 1;
 	}
 
-	else if ((*str)[offset] == '\n')
+	else if ((*str)[offset - tokenLength] == '\n')
 	{
 		Tokenizer::complete = true;
 	}
